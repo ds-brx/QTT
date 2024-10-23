@@ -207,6 +207,11 @@ class QuickOptimizer(Optimizer):
             The mean and standard deviation of the performance of the pipelines and their costs.
         """
         pipeline, curve = self.pipelines, self.curves
+        print("Predictions")
+        print("Pipelines...")
+        print(pipeline)
+        print("Curves")
+        print(curve)
 
         pred = self.perf_predictor.predict(pipeline, curve)  # type: ignore
         pred_mean, pred_std = pred
@@ -291,6 +296,7 @@ class QuickOptimizer(Optimizer):
         ranks = self._optimize_acq_fn(pred_mean, pred_std, cost)
         ranks = [r for r in ranks if r not in self.stoped | self.failed]
         index = ranks[-1]
+        print("Predicted Index: ", index)
         logger.debug(f"predicted score: {pred_mean[index]:.4f}")
         return index
 
@@ -308,10 +314,12 @@ class QuickOptimizer(Optimizer):
 
         self.ask_count += 1
         if len(self.evaled) < self.init_random_search_steps:
+            print("Random Sampling Configs")
             left = set(range(self.N)) - self.evaled - self.failed - self.stoped
             index = left.pop()
             fidelity = 1
         else:
+            print("Predicting Configerations")
             index = self._ask()
             fidelity = self.fidelities[index] + 1
 
@@ -330,6 +338,7 @@ class QuickOptimizer(Optimizer):
         """
         if isinstance(result, dict):
             result = [result]
+        print("Length Result: ", len(result))
         for res in result:
             self._tell(res)
 
@@ -357,6 +366,7 @@ class QuickOptimizer(Optimizer):
         self.evaled.add(index)
         self.eval_count += 1
 
+##whats this ??
         if self.patience is not None:
             assert self.score_history is not None
             if not np.any(self.score_history[index] < (score - self.tol)):
@@ -382,6 +392,7 @@ class QuickOptimizer(Optimizer):
             and not self.eval_count % self.refit_interval
             and self.eval_count >= self.refit_init_steps
         ):
+            print("Fititng Estimator...")
             self.fit_extra()
 
     def fit_extra(self):

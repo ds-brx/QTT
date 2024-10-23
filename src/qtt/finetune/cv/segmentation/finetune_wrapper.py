@@ -8,47 +8,50 @@ from . import train
 
 hp_list = [
     "batch_size",
-    "bss_reg",
-    "clip_grad",
-    "cotuning_reg",
-    "cutmix",
-    "delta_reg",
-    "drop",
+    "epochs",
     "lr",
-    "mixup",
-    "mixup_prob",
-    "model",
-    "opt",
-    "pct_to_freeze",
-    "sched",
-    "smoothing",
-    "sp_reg",
-    "warmup_epochs",
-    "warmup_lr",
+    "momentum",
     "weight_decay",
+    "lr_warmup_epochs",
+    "lr_warmup_method",
+    "lr_warmup_decay",
+    "print_freq",
+    "output_dir",
+    "resume",
+    "start_epoch",
+    "dataset",
+    "model",
+    "workers"
 ]
 
 num_hp_list = [
-    "clip_grad",
-    "layer_decay",
+    "aux_loss",
+    "test_only",
+    "use_deterministic_algorithms",
+    "amp",
+    "use_v2"
 ]
 
 bool_hp_list = [
+    "aux_loss",
+    "test_only",
+    "use_deterministic_algorithms",
     "amp",
-    "linear_probing",
-    "stoch_norm",
+    "use_v2"
 ]
 
-cond_hp_list = ["decay_rate", "decay_epochs", "patience_epochs"]
+cond_hp_list =[
+    "world_size",
+    "dist_url"
+]
 
 static_args = [
-    "--pretrained",
-    "--checkpoint_hist",
-    "1",
-    "--epochs",
-    "50",
-    "--workers",
-    "8",
+    "--data-path",
+    "--output-dir",
+    "--resume",
+    "--weights",
+    "--weights-backbone",
+    "--backend"
 ]
 
 task_args = [
@@ -56,7 +59,6 @@ task_args = [
     "val-split",
     "num-classes",
 ]
-
 
 def finetune_script(
     job: dict,
@@ -67,8 +69,6 @@ def finetune_script(
     fidelity = job["fidelity"]
     data_path = task_info["data-path"]
     output_path = task_info.get("output-path", ".")
-    print("Config Being Evaluated: ")
-    print(config)
 
     args = [data_path]
     # REGULAR HPS/ARGS
@@ -89,37 +89,10 @@ def finetune_script(
 
     # CONDITIONAL ARGS
     for hp in cond_hp_list:
-        print("Conditional Hyyperparameter--")
-        print("HP: ", hp)
-        print(option)
         option = config.get(hp, False)
         if option:
             args += [f"--{hp}", str(option)]
 
-    # DATA AUGMENTATIONS
-    print("Data Augmentations")
-    data_augmentation = config.get("data_augmentation")
-    if data_augmentation == "auto_augment":
-        vers = config.get("auto_augment")
-        args += ["--auto_augment", str(vers)]
-    elif data_augmentation == "trivial_augment":
-        args += [f"--{data_augmentation}"]
-    elif data_augmentation == "random_augment":
-        ra_num_ops = config.get("ra_num_ops")
-        ra_magnitude = config.get("ra_magnitude")
-        args += ["--random_augment"]
-        args += ["--ra_num_ops", str(ra_num_ops)]
-        args += ["--ra_magnitude", str(ra_magnitude)]
-
-    # OPTIMIZER BETAS
-    opt_betas = config.get("opt_betas")
-    if opt_betas:
-        opt_betas = opt_betas.strip("()").split(",")
-        args += ["--opt_betas", *opt_betas]
-
-    # TASK SPECIFIC ARGS
-    for arg in task_args:
-        args += [f"--{arg}", str(task_info[arg])]
 
     args += ["--fidelity", str(fidelity)]
     args += ["--experiment", str(config_id)]
@@ -139,18 +112,13 @@ def finetune_script(
 
     start = time.time()
     try:
-        print("training")
-        print(args)
         result = train.main(args, args_text)
     except Exception as e:
         result = e
     end = time.time()
     try:
         summary = pd.read_csv(os.path.join(output_dir, "summary.csv"))
-        print(summary.head())
         eval_top1 = summary["eval_top1"].iloc[-1]
-        print("Eval_top1")
-        print(eval_top1)
     except FileNotFoundError:
         result = "No summary.csv found"
 
@@ -160,7 +128,6 @@ def finetune_script(
         report["cost"] = end - start
         report["status"] = False
         report["info"] = result
-        print("Report: ", report)
         return report
 
     report = job.copy()
