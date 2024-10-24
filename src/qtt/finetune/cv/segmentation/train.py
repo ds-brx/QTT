@@ -126,6 +126,8 @@ def train_one_epoch(model, criterion, optimizer, data_loader, lr_scheduler, devi
 
 
 def main(args):
+    if args.fidelity>0:
+        args.epochs = args.fidelity
     if args.backend.lower() != "pil" and not args.use_v2:
         # TODO: Support tensor backend in V1?
         raise ValueError("Use --use-v2 if you want to use the tv_tensor or tensor backend.")
@@ -278,7 +280,7 @@ def get_args_parser(add_help=True):
         "-b", "--batch-size", default=8, type=int, help="images per gpu, the total batch size is $NGPU x batch_size"
     )
     parser.add_argument("--epochs", default=30, type=int, metavar="N", help="number of total epochs to run")
-
+    parser.add_argument("--fidelity", default=1, type=int, metavar="N", help="Fidelity to calculate at")
     parser.add_argument(
         "-j", "--workers", default=16, type=int, metavar="N", help="number of data loading workers (default: 16)"
     )

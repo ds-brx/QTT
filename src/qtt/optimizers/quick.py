@@ -78,7 +78,7 @@ class QuickOptimizer(Optimizer):
         #
         path: str | None = None,
         seed: int | None = None,
-        verbosity: int = 2,
+        verbosity: int = 1,
     ):
         super().__init__(path=path)
         set_logger_verbosity(verbosity, logger)
@@ -207,11 +207,6 @@ class QuickOptimizer(Optimizer):
             The mean and standard deviation of the performance of the pipelines and their costs.
         """
         pipeline, curve = self.pipelines, self.curves
-        print("Predictions")
-        print("Pipelines...")
-        print(pipeline)
-        print("Curves")
-        print(curve)
 
         pred = self.perf_predictor.predict(pipeline, curve)  # type: ignore
         pred_mean, pred_std = pred
@@ -338,7 +333,6 @@ class QuickOptimizer(Optimizer):
         """
         if isinstance(result, dict):
             result = [result]
-        print("Length Result: ", len(result))
         for res in result:
             self._tell(res)
 
@@ -392,7 +386,6 @@ class QuickOptimizer(Optimizer):
             and not self.eval_count % self.refit_interval
             and self.eval_count >= self.refit_init_steps
         ):
-            print("Fititng Estimator...")
             self.fit_extra()
 
     def fit_extra(self):

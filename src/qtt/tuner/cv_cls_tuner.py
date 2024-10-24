@@ -1,5 +1,5 @@
 from ..finetune.cv.classification import extract_task_info_metafeat
-from ..finetune.cv.classification.finetune_wrapper import finetune_script
+from ..finetune.cv.segmentation.finetune_wrapper import finetune_script
 from ..optimizers.quick import QuickOptimizer
 from ..pretrained import load_pretrained_optimizer
 from .quicktuner import QuickTuner
@@ -19,7 +19,7 @@ class QuickCVCLSTuner(QuickTuner):
         data_path: str,
         n: int = 512,
         path: str | None = None,
-        verbosity: int = 2,
+        verbosity: int =  1,
     ):
         quick_opt: QuickOptimizer = load_pretrained_optimizer("mtlbm/full")
 
