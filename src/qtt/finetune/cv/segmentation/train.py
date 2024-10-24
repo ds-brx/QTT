@@ -3,7 +3,7 @@ import os
 import time
 import warnings
 
-import presets
+from . import presets
 import torch
 import torch.utils.data
 import torchvision
