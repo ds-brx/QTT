@@ -1,12 +1,12 @@
-from ..finetune.cv.classification import extract_task_info_metafeat
-from ..finetune.cv.classification.finetune_wrapper import finetune_script
+from ..finetune.cv.segmentation import extract_task_info_metafeat
+from ..finetune.cv.segmentation.finetune_wrapper import finetune_script
 from ..optimizers.quick import QuickOptimizer
 from ..pretrained import load_pretrained_optimizer
 from .quicktuner import QuickTuner
 
 
-class QuickCVCLSTuner(QuickTuner):
-    """QuickTuner for image classification tasks.
+class QuickCVSEGTuner(QuickTuner):
+    """QuickTuner for image segmentation tasks.
 
     Args:
         data_path (str): Path to the dataset.
@@ -21,6 +21,7 @@ class QuickCVCLSTuner(QuickTuner):
         path: str | None = None,
         verbosity: int =  1,
     ):
+        ##TODO: set up a pretrained segmentation optimiser
         quick_opt: QuickOptimizer = load_pretrained_optimizer("mtlbm/full")
 
         task_info, metafeat = extract_task_info_metafeat(data_path)

@@ -67,8 +67,6 @@ def finetune_script(
     fidelity = job["fidelity"]
     data_path = task_info["data-path"]
     output_path = task_info.get("output-path", ".")
-    print("Config Being Evaluated: ")
-    print(config)
 
     args = [data_path]
     # REGULAR HPS/ARGS

@@ -123,6 +123,9 @@ def train_one_epoch(model, criterion, optimizer, data_loader, lr_scheduler, devi
         lr_scheduler.step()
 
         metric_logger.update(loss=loss.item(), lr=optimizer.param_groups[0]["lr"])
+        return {
+            "Score" : metric_logger.meters["loss"].global_avg
+        }
 
 
 def main(args):
@@ -246,7 +249,7 @@ def main(args):
     for epoch in range(args.start_epoch, args.epochs):
         if args.distributed:
             train_sampler.set_epoch(epoch)
-        train_one_epoch(model, criterion, optimizer, data_loader, lr_scheduler, device, epoch, args.print_freq, scaler)
+        results = train_one_epoch(model, criterion, optimizer, data_loader, lr_scheduler, device, epoch, args.print_freq, scaler)
         confmat = evaluate(model, data_loader_test, device=device, num_classes=num_classes)
         print(confmat)
         checkpoint = {
@@ -262,8 +265,10 @@ def main(args):
         utils.save_on_master(checkpoint, os.path.join(args.output_dir, "checkpoint.pth"))
 
     total_time = time.time() - start_time
+    results["Cost"] = total_time
     total_time_str = str(datetime.timedelta(seconds=int(total_time)))
     print(f"Training time {total_time_str}")
+    return results
 
 
 def get_args_parser(add_help=True):
