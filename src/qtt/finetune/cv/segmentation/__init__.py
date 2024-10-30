@@ -11,14 +11,12 @@ def extract_segmentation_task_info_metafeat(
     download=False
 ):
     root = Path(root)
-    print(root)
     assert root.exists(), f"dataset-path: {root} does not exist."
 
     # Initialize the dataset
     if dataset_class == VOCSegmentation:
         assert year is not None, "Year must be specified for VOCSegmentation."
         dataset_name = "voc"
-        print(dataset_class)
         train_dataset = dataset_class(root=root, year=year, image_set="train", download=download)
         # val_dataset = dataset_class(root=root, year=year, image_set="valid", download=True)
     else:
@@ -46,12 +44,12 @@ def extract_segmentation_task_info_metafeat(
 
     return task_info, metafeat
 
-# # Example usage
-task_info, metafeat = extract_segmentation_task_info_metafeat(
-    dataset_class=VOCSegmentation, 
-    root='/work/dlclarge2/dasb-Camvid', 
-    year='2007', 
-)
-print(task_info)
-print(metafeat)
+# # # Example usage
+# task_info, metafeat = extract_segmentation_task_info_metafeat(
+#     dataset_class=VOCSegmentation, 
+#     root='/work/dlclarge2/dasb-Camvid', 
+#     year='2007', 
+# )
+# print(task_info)
+# print(metafeat)
 

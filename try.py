@@ -17,7 +17,7 @@ from torchvision.datasets import VOCSegmentation
 
 def get_config_space():
     cs = ConfigurationSpace("cv-segmentation")
-    bs = OrdinalHyperparameter("batch_size", [16, 32, 64])
+    bs = OrdinalHyperparameter("batch_size", [4])
     lr = OrdinalHyperparameter("lr", [1e-05, 5e-05, 0.0001, 0.0005, 0.001, 0.005, 0.01])
     mom = OrdinalHyperparameter("momentum", [0.0, 0.8, 0.9, 0.95, 0.99])
     wd = OrdinalHyperparameter("weight_decay", [0, 1e-05, 0.0001, 0.001, 0.01, 0.1])
@@ -32,8 +32,19 @@ if __name__ == "__main__":
     
     print("Generate Config Space")
     cs = get_config_space()
-    perf_predictor = PerfPredictor()
-    cost_predictor = CostPredictor()
+
+    config = pd.read_csv("mtlbm/mini/config.csv", index_col=0)
+    cost = pd.read_csv("mtlbm/mini/cost.csv", index_col=0)
+    meta = pd.read_csv("mtlbm/mini/meta.csv", index_col=0)
+    curve = pd.read_csv("mtlbm/mini/curve.csv", index_col=0)
+
+    X = pd.concat([config, meta], axis=1)
+    y = curve.values
+
+    perf_predictor = PerfPredictor().fit(X, y)
+
+    y = cost.values
+    cost_predictor = CostPredictor().fit(X, y)
     
     print("Generate Optimiser")
     optimizer = QuickOptimizer(
@@ -60,7 +71,7 @@ if __name__ == "__main__":
                             year='2007', 
                         )
     print("Optimiser Setup")
-    optimizer.setup(50, metafeat)  # number of configurations to sample
+    optimizer.setup(10, metafeat)  # number of configurations to sample
 
     print("Tuner Set Up")
     tuner = QuickTuner(

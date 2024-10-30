@@ -20,32 +20,19 @@ def get_dataset(args, is_train):
     def sbd(*args, **kwargs):
         kwargs.pop("use_v2")
         return torchvision.datasets.SBDataset(*args, mode="segmentation", **kwargs)
-
+    
     def voc(*args, **kwargs):
         kwargs.pop("use_v2")
-        # Define the transform to convert PIL images to tensors
-        transform = transforms.Compose([
-            transforms.ToTensor(),  # Converts PIL Image to PyTorch Tensor and scales values to [0, 1]
-        ])
-
-        # Load the VOCSegmentation dataset with the defined transform
-        return torchvision.datasets.VOCSegmentation(
-            root=Path("/work/dlclarge2/dasb-Camvid"),
-            year="2007",
-            image_set="train",
-            download=False,
-            transforms=lambda img, target: (transform(img), transform(target))  # Apply transform to both image and target
-        )
+        return torchvision.datasets.VOCSegmentation(*args, **kwargs)
 
     paths = {
-        "voc": (args.data_path, voc, 21),
+        "voc": (args.data_path, torchvision.datasets.VOCSegmentation, 21),
         "voc_aug": (args.data_path, sbd, 21),
         "coco": (args.data_path, get_coco, 21),
     }
     p, ds_fn, num_classes = paths[args.dataset]
-
     image_set = "train" if is_train else "val"
-    ds = ds_fn(p, image_set=image_set, transforms=get_transform(is_train, args), use_v2=args.use_v2)
+    ds = ds_fn(root = p, year = "2007", image_set=image_set, transforms=get_transform(is_train, args))
     return ds, num_classes
 
 
@@ -121,8 +108,12 @@ def train_one_epoch(model, criterion, optimizer, data_loader, lr_scheduler, devi
     header = f"Epoch: [{epoch}]"
     for image, target in metric_logger.log_every(data_loader, print_freq, header):
         image, target = image.to(device), target.to(device)
+        print("Input Dimensions---")
+        print(image.shape)
+        print(target.shape)
         with torch.cuda.amp.autocast(enabled=scaler is not None):
             output = model(image)
+            target = target.squeeze(1).long()
             loss = criterion(output, target)
 
         optimizer.zero_grad()
@@ -163,9 +154,9 @@ def main(args):
         torch.use_deterministic_algorithms(True)
     else:
         torch.backends.cudnn.benchmark = True
-
     dataset, num_classes = get_dataset(args, is_train=True)
     dataset_test, _ = get_dataset(args, is_train=False)
+
 
     if args.distributed:
         train_sampler = torch.utils.data.distributed.DistributedSampler(dataset)
@@ -186,7 +177,7 @@ def main(args):
     data_loader_test = torch.utils.data.DataLoader(
         dataset_test, batch_size=1, sampler=test_sampler, num_workers=args.workers, collate_fn=utils.collate_fn
     )
-
+    print("Getting model")
     model = torchvision.models.get_model(
         args.model,
         weights=args.weights,
