@@ -10,7 +10,7 @@ def get_modules(use_v2):
 
         return torchvision.transforms.v2, torchvision.tv_tensors, v2_extras
     else:
-        import transforms
+        from . import transforms
 
         return transforms, None, None
 

@@ -6,7 +6,7 @@ import torch.utils.data
 import torchvision
 from PIL import Image
 from pycocotools import mask as coco_mask
-from transforms import Compose
+from .transforms import Compose
 
 
 class FilterAndRemapCocoCategories:

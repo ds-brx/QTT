@@ -7,12 +7,14 @@ from . import presets
 import torch
 import torch.utils.data
 import torchvision
-import utils
-from coco_utils import get_coco
+from . import utils
+from .coco_utils import get_coco
 from torch import nn
 from torch.optim.lr_scheduler import PolynomialLR
 from torchvision.transforms import functional as F, InterpolationMode
+from torchvision import transforms
 
+from pathlib import Path
 
 def get_dataset(args, is_train):
     def sbd(*args, **kwargs):
@@ -21,7 +23,19 @@ def get_dataset(args, is_train):
 
     def voc(*args, **kwargs):
         kwargs.pop("use_v2")
-        return torchvision.datasets.VOCSegmentation(*args, **kwargs)
+        # Define the transform to convert PIL images to tensors
+        transform = transforms.Compose([
+            transforms.ToTensor(),  # Converts PIL Image to PyTorch Tensor and scales values to [0, 1]
+        ])
+
+        # Load the VOCSegmentation dataset with the defined transform
+        return torchvision.datasets.VOCSegmentation(
+            root=Path("/work/dlclarge2/dasb-Camvid"),
+            year="2007",
+            image_set="train",
+            download=False,
+            transforms=lambda img, target: (transform(img), transform(target))  # Apply transform to both image and target
+        )
 
     paths = {
         "voc": (args.data_path, voc, 21),
@@ -141,7 +155,6 @@ def main(args):
         utils.mkdir(args.output_dir)
 
     utils.init_distributed_mode(args)
-    print(args)
 
     device = torch.device(args.device)
 
@@ -163,7 +176,7 @@ def main(args):
 
     data_loader = torch.utils.data.DataLoader(
         dataset,
-        batch_size=args.batch_size,
+        batch_size=int(args.batch_size),
         sampler=train_sampler,
         num_workers=args.workers,
         collate_fn=utils.collate_fn,
