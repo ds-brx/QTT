@@ -1,0 +1,4 @@
+batch_size,learning_rate,momentum,weight_decay,lr_warmup_epochs,model,loss,training_time
+4,5e-05,0.8,0.0001,0,deeplabv3_mobilenet_v3_large,0.0,5.331606864929199
+4,1e-05,0.8,0.0001,5,lraspp_mobilenet_v3_large,3.197410952370122,4.400773525238037
+4,0.0005,0.0,0.001,10,lraspp_mobilenet_v3_large,3.1937048570165096,3.9970970153808594

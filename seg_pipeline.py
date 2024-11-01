@@ -33,18 +33,18 @@ if __name__ == "__main__":
     print("Generate Config Space")
     cs = get_config_space()
 
-    config = pd.read_csv("mtlbm/mini/config.csv", index_col=0)
-    cost = pd.read_csv("mtlbm/mini/cost.csv", index_col=0)
-    meta = pd.read_csv("mtlbm/mini/meta.csv", index_col=0)
-    curve = pd.read_csv("mtlbm/mini/curve.csv", index_col=0)
+    # config = pd.read_csv("mtlbm/mini/config.csv", index_col=0)
+    # cost = pd.read_csv("mtlbm/mini/cost.csv", index_col=0)
+    # meta = pd.read_csv("mtlbm/mini/meta.csv", index_col=0)
+    # curve = pd.read_csv("mtlbm/mini/curve.csv", index_col=0)
 
-    X = pd.concat([config, meta], axis=1)
-    y = curve.values
+    # X = pd.concat([config, meta], axis=1)
+    # y = curve.values
 
-    perf_predictor = PerfPredictor().fit(X, y)
+    perf_predictor = PerfPredictor()
 
-    y = cost.values
-    cost_predictor = CostPredictor().fit(X, y)
+    # y = cost.values
+    cost_predictor = CostPredictor()
     
     print("Generate Optimiser")
     optimizer = QuickOptimizer(
