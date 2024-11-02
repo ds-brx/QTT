@@ -17,7 +17,7 @@ hyperparameter_grid = {
     "momentum": [0.0, 0.8, 0.9, 0.95, 0.99],
     "weight_decay": [0, 1e-05, 0.0001, 0.001, 0.01, 0.1],
     "lr_warmup_epochs": [0, 5, 10],
-    "model": ["deeplabv3_mobilenet_v3_large", "lraspp_mobilenet_v3_large"]
+    "model": ["fcn_resnet50", "lraspp_mobilenet_v3_large"]
 }
 
 # Create all combinations of hyperparameters
@@ -40,32 +40,24 @@ def train_one_epoch(model, dataloader, optimizer, criterion, device):
     running_loss = 0.0
     for images, targets in dataloader:
         images, targets = images.to(device), targets.to(device)
-        targets = targets.squeeze(1).long()
         optimizer.zero_grad()
-        print(images.shape)
         outputs = model(images)["out"]
+        targets = targets.squeeze(1).long()
         loss = criterion(outputs, targets)
         loss.backward()
         optimizer.step()
         running_loss += loss.item()
     return running_loss / len(dataloader)
 
-# Define the transform to convert PIL images to tensors
+# Load the Pascal VOC 2007 Dataset
 transform = transforms.Compose([
     transforms.Resize((224, 224)),
-    transforms.ToTensor(),  # Converts PIL Image to PyTorch Tensor and scales values to [0, 1]
+    transforms.ToTensor(),
 ])
 
-# Load the VOCSegmentation dataset with the defined transform
-train_dataset = VOCSegmentation(
-    root="/work/dlclarge2/dasb-Camvid",
-    year="2007",
-    image_set="train",
-    download=False,
-    transforms=lambda img, target: (transform(img), transform(target))  # Apply transform to both image and target
-)
-
+train_dataset = VOCSegmentation(root="/work/dlclarge2/dasb-Camvid", year="2007", image_set="train", download=False, transforms=lambda img, target: (transform(img), transform(target)))
 train_loader = DataLoader(train_dataset, batch_size=4, shuffle=True)
+
 # Device Configuration
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -86,35 +78,49 @@ for config in selected_configs:
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.SGD(model.parameters(), lr=learning_rate, momentum=momentum, weight_decay=weight_decay)
 
+    # Track loss for each epoch
+    epoch_losses = []
+
     # Training with warmup epochs
-    epochs = 1
+    epochs = 10
     start_time = time.time()
     for epoch in range(epochs):
+        
         if epoch < lr_warmup_epochs:
             for param_group in optimizer.param_groups:
                 param_group["lr"] = learning_rate * (epoch + 1) / lr_warmup_epochs
         else:
             for param_group in optimizer.param_groups:
                 param_group["lr"] = learning_rate
+
+
+        loss = train_one_epoch(model, train_loader, optimizer, criterion, device)
         
-        try:
-            loss = train_one_epoch(model, train_loader, optimizer, criterion, device)
-        except:
-            loss = 0
+        print("Epoch: {} Loss: {}".format(epoch,loss))
+        epoch_losses.append(loss)
 
     training_time = time.time() - start_time
-    results.append({
+
+    # Append configuration and losses to results
+    result = {
         "batch_size": batch_size,
         "learning_rate": learning_rate,
         "momentum": momentum,
         "weight_decay": weight_decay,
         "lr_warmup_epochs": lr_warmup_epochs,
         "model": model_name,
-        "loss": loss,
         "training_time": training_time
-    })
+    }
+
+    # Add loss for each epoch as separate columns
+    for i, epoch_loss in enumerate(epoch_losses):
+        result[f"epoch_{i+1}"] = epoch_loss
+
+    results.append(result)
 
 # Save results to a DataFrame and export to CSV
 results_df = pd.DataFrame(results)
 results_df.to_csv("hpo_results.csv", index=False)
 print("Results saved to hpo_results.csv")
+
+

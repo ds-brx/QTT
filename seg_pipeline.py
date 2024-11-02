@@ -38,13 +38,23 @@ if __name__ == "__main__":
     # meta = pd.read_csv("mtlbm/mini/meta.csv", index_col=0)
     # curve = pd.read_csv("mtlbm/mini/curve.csv", index_col=0)
 
-    # X = pd.concat([config, meta], axis=1)
-    # y = curve.values
+    # print(config)
+    # print(cost.values)
+    # print(meta)
+    # print(curve.values)
 
-    perf_predictor = PerfPredictor()
+    df = pd.read_csv("hpo_results.csv")
+    cost = df["training_time"].values
+    curve = df.filter(regex=r'^epoch_[1-9]$|^epoch_10$')
+    config = df.drop(columns=["training_time"] + curve.columns.tolist())
 
-    # y = cost.values
-    cost_predictor = CostPredictor()
+    X = config
+    y = curve.values
+
+    perf_predictor = PerfPredictor().fit(X,y)
+
+    y = cost.values
+    cost_predictor = CostPredictor().fit(X,y)
     
     print("Generate Optimiser")
     optimizer = QuickOptimizer(
