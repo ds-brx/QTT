@@ -25,7 +25,7 @@ logger = logging.getLogger(__name__)
 DEFAULT_FIT_PARAMS = {
     "learning_rate_init": 0.0001,
     "batch_size": 1024,
-    "max_iter": 100,
+    "max_iter": 5,
     "early_stop": True,
     "patience": 5,
     "validation_fraction": 0.1,
@@ -225,7 +225,7 @@ class CostPredictor(Predictor):
             header = f"TRAIN: ({it}/{max_iter})"
             metric_logger = MetricLogger(delimiter=" ")
             for batch in metric_logger.log_every(
-                train_loader, len(train_loader) // 10, header, logger
+                train_loader, 1, header, logger
             ):
                 # forward
                 batch = [item.to(_dev) for item in batch]

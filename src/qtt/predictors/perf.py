@@ -27,7 +27,7 @@ logger = logging.getLogger(__name__)
 DEFAULT_FIT_PARAMS = {
     "learning_rate_init": 0.001,
     "batch_size": 2048,
-    "max_iter": 100,
+    "max_iter": 5,
     "early_stop": True,
     "patience": 5,
     "validation_fraction": 0.1,
@@ -37,7 +37,7 @@ DEFAULT_FIT_PARAMS = {
 DEFAULT_REFIT_PARAMS = {
     "learning_rate_init": 0.001,
     "batch_size": 2048,
-    "max_iter": 50,
+    "max_iter": 5,
     "early_stop": True,
     "patience": 5,
     "tol": 1e-4,
