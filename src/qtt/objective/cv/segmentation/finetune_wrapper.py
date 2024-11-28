@@ -14,7 +14,6 @@ sam = [
 
 hf_models = [
     "nvidia/mit-b0",
-    "facebook/sam-vit-base",
      "google/deeplabv3_mobilenet_v2_1.0_513",
      "microsoft/beit-base-finetuned-ade-640-640",
      "Intel/dpt-large-ade",
@@ -36,6 +35,7 @@ pt_models = [
 hp_list = [
     "model_name_or_path",
     "per_device_train_batch_size",
+    "per_device_eval_batch_size",
     "learning_rate",
     "lr_scheduler_type",
     "weight_decay",
@@ -129,11 +129,10 @@ if __name__ == "__main__":
     # Hyperparameter grid
     hyperparameter_grid = {
         "model_name_or_path": [
-            "sam",
-            "fcn_resnet50",
-            "nvidia/mit-b0"
+            "openmmlab/upernet-convnext-tiny",
         ],
-        "per_device_train_batch_size": [2],
+        "per_device_train_batch_size": [1],
+        "per_device_eval_batch_size": [1],
         "learning_rate": [1e-05, 5e-05, 0.0001, 0.0005, 0.001, 0.005, 0.01],
         "lr_scheduler_type": ["linear", "constant"],
         "weight_decay": [0, 1e-05, 0.0001, 0.001, 0.01, 0.1],
@@ -143,13 +142,14 @@ if __name__ == "__main__":
     keys, values = zip(*hyperparameter_grid.items())
     all_combinations = list(itertools.product(*values))
 
-    random_combinations = random.sample(all_combinations, 2)
+    random_combinations = random.sample(all_combinations, 1)
 
     dict_combinations = [
         {key: value for key, value in zip(keys, combination)}
         for combination in random_combinations
     ]
 
+    file_path = "finetuning_results.csv"
     results = []
     for i, combination_dict in enumerate(dict_combinations, 1):
         job = {
@@ -170,10 +170,11 @@ if __name__ == "__main__":
         result["cost"] = report["cost"]
         results.append(result)
 
-    df = pd.DataFrame(results)
+    if os.path.exists(file_path):
+        existing_df = pd.read_csv(file_path)
+        df = pd.concat([existing_df, df], ignore_index=True)
 
-    df.to_csv("finetuning_results.csv", index=False)
-
+    df.to_csv(file_path, index=False)
     print(df)
 
 

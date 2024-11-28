@@ -175,13 +175,14 @@ def main(args):
     print("MODEL VALIDATING...")
     for batch in tqdm(valid_dataloader):
         model.eval()
-        outputs = model(pixel_values=batch["pixel_values"].to(device),
-                        input_boxes=batch["input_boxes"].to(device),
-                        multimask_output=False)
-        predicted_masks = outputs.pred_masks.squeeze(1)
-        ground_truth_masks = batch["ground_truth_mask"].float().to(device)
-        loss = seg_loss(predicted_masks, ground_truth_masks.unsqueeze(1))
-        val_loss += loss
+        with torch.no_grad():
+          outputs = model(pixel_values=batch["pixel_values"].to(device),
+                          input_boxes=batch["input_boxes"].to(device),
+                          multimask_output=False)
+          predicted_masks = outputs.pred_masks.squeeze(1)
+          ground_truth_masks = batch["ground_truth_mask"].float().to(device)
+          loss = seg_loss(predicted_masks, ground_truth_masks.unsqueeze(1))
+          val_loss += loss
 
     score = val_loss/len(valid_dataloader)
 

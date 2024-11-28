@@ -245,7 +245,6 @@ def main(args):
         print(confmat)
         return
 
-    iou = []
     start_time = time.time()
     for epoch in range(args.start_epoch, args.num_train_epochs):
         if args.distributed:
@@ -254,8 +253,7 @@ def main(args):
         confmat = evaluate(model, data_loader_test, device=device, num_classes=num_classes)
         
         acc_global, acc, iu = confmat.compute()
-        iou.append(iu)
-        print(confmat)
+        mean_iou = iu.mean().item() * 100
 
         checkpoint = {
             "model": model_without_ddp.state_dict(),
@@ -272,7 +270,7 @@ def main(args):
     total_time = time.time() - start_time
     total_time_str = str(datetime.timedelta(seconds=int(total_time)))
     print(f"Training time {total_time_str}")
-    return iou,total_time
+    return mean_iou,total_time
 
 
 def get_args_parser(add_help=True):

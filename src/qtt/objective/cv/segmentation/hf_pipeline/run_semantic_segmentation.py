@@ -303,6 +303,7 @@ def main(args):
         model_args.config_name or model_args.model_name_or_path,
         label2id=label2id,
         id2label=id2label,
+        num_labels=len(id2label),
         cache_dir=model_args.cache_dir,
         revision=model_args.model_revision,
         token=model_args.token,
@@ -316,6 +317,7 @@ def main(args):
         revision=model_args.model_revision,
         token=model_args.token,
         trust_remote_code=model_args.trust_remote_code,
+        ignore_mismatched_sizes=True
     )
     image_processor = AutoImageProcessor.from_pretrained(
         model_args.image_processor_name or model_args.model_name_or_path,
